@@ -46,8 +46,6 @@ const returnPath = "/login/google/return";
 //   process.env.PROJECT_DOMAIN
 // }.glitch.me${returnPath}`;
 
-var callbackURL = "https://21jlqq6qk0.sse.codesandbox.io/login/google/return";
-
 var scopes = [
   "https://www.googleapis.com/auth/spreadsheets",
   "https://www.googleapis.com/auth/plus.me",
@@ -56,15 +54,8 @@ var scopes = [
 const clientID = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 console.log(clientID);
-var oauth2Client = new google.auth.OAuth2(clientID, clientSecret, callbackURL);
 
-var oauthUrl = oauth2Client.generateAuthUrl({
-  // 'online' (default) or 'offline' (gets refresh_token)
-  // If you only need one scope you can pass it as a string
-  scope: scopes,
-  access_type: "offline",
-  prompt: "consent" //or could be 'consent' to define what access is given
-});
+var oauth2Client;
 
 // init project
 
@@ -107,11 +98,21 @@ app.get("/logoff", function(req, res) {
 });
 
 app.get("/auth/google", function(req, res) {
-  console.log("auth", req.header("referer"));
-  res.cookie("referer", req.header("referer"));
+  const referer = req.header("referer");
+  console.log("auth", referer);
+  res.cookie("referer", referer);
   if (req.cookies.googleauth) {
     res.redirect("/success");
   } else {
+    var callbackURL = `${referer}login/google/return`;
+    oauth2Client = new google.auth.OAuth2(clientID, clientSecret, callbackURL);
+    var oauthUrl = oauth2Client.generateAuthUrl({
+      // 'online' (default) or 'offline' (gets refresh_token)
+      // If you only need one scope you can pass it as a string
+      scope: scopes,
+      access_type: "offline",
+      prompt: "consent" //or could be 'consent' to define what access is given
+    });
     console.log("redirecting to ", oauthUrl);
     res.redirect(oauthUrl);
   }
