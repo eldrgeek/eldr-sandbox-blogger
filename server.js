@@ -101,11 +101,22 @@ app.get("/auth/google", function(req, res) {
   const referer = req.header("referer");
   console.log("auth", referer);
   res.cookie("referer", referer);
+  if (!callbackURL) {
+    var callbackURL = `${referer}login/google/return`;
+    try {
+      oauth2Client = new google.auth.OAuth2(
+        clientID,
+        clientSecret,
+        callbackURL
+      );
+    } catch (e) {
+      console.log("ERROR", e);
+    }
+    console.log("got auth");
+  }
   if (req.cookies.googleauth) {
     res.redirect("/success");
   } else {
-    var callbackURL = `${referer}login/google/return`;
-    oauth2Client = new google.auth.OAuth2(clientID, clientSecret, callbackURL);
     var oauthUrl = oauth2Client.generateAuthUrl({
       // 'online' (default) or 'offline' (gets refresh_token)
       // If you only need one scope you can pass it as a string
